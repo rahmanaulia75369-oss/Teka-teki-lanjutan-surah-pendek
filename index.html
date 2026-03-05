@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tebak Ayat - Ramadhan Edition</title>
+    <style>
+        :root {
+            --hijau-gelap: #064e3b;
+            --hijau-terang: #10b981;
+            --emas: #fbbf24;
+            --krem: #fffbeb;
+            --putih: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+
+        body { 
+            background-color: var(--hijau-gelap); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; padding: 15px;
+            color: #333;
+        }
+
+        /* --- HALAMAN PEMBUKA --- */
+        #splash-screen {
+            background: var(--putih);
+            width: 100%; max-width: 400px;
+            padding: 40px 20px;
+            border-radius: 30px;
+            text-align: center;
+            border: 5px solid var(--emas);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .dev-name { color: var(--hijau-gelap); font-weight: bold; margin: 10px 0; font-size: 1.2rem; }
+        .title-game { font-size: 1.8rem; color: var(--hijau-terang); margin-bottom: 30px; line-height: 1.2; }
+        
+        .play-btn {
+            background: var(--emas);
+            color: var(--hijau-gelap);
+            border: none; padding: 15px 40px;
+            font-size: 1.3rem; font-weight: bold;
+            border-radius: 50px; cursor: pointer;
+            transition: 0.3s; width: 80%;
+            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+        }
+
+        /* --- AREA GAME --- */
+        #main-game { display: none; width: 100%; max-width: 400px; }
+
+        .game-card {
+            background: var(--putih);
+            border-radius: 25px; overflow: hidden;
+            border: 4px solid var(--emas);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .header { background: var(--hijau-gelap); padding: 15px; color: var(--emas); text-align: center; }
+        .score-box { font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
+
+        .quiz-container { padding: 20px; text-align: center; }
+        .info-ayat { color: var(--hijau-terang); font-weight: bold; margin-bottom: 8px; }
+
+        .ayat-box {
+            background: #f3f4f6; padding: 20px; border-radius: 15px;
+            margin-bottom: 20px; min-height: 120px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .teks-arab {
+            font-size: 1.6rem; line-height: 2.5rem;
+            direction: rtl; color: #1f2937;
+        }
+
+        .options-grid { display: grid; gap: 10px; }
+        .btn-option {
+            background: var(--putih); border: 2px solid #e5e7eb;
+            padding: 12px; border-radius: 12px; cursor: pointer;
+            font-size: 0.95rem; transition: 0.2s;
+        }
+
+        .correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+
+        #next-btn {
+            margin-top: 15px; background: var(--emas); color: var(--hijau-gelap);
+            border: none; padding: 12px; border-radius: 10px;
+            font-weight: bold; cursor: pointer; width: 100%; display: none;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div style="font-size: 4rem; margin-bottom: 10px;">🕌</div>
+        <p style="color: #666;">Game Edukasi Islami</p>
+        <h1 class="title-game">Tebak Lanjutan<br>Ayat Al-Qur'an</h1>
+        
+        <p style="margin-bottom: 5px; color: #991b1b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Dibuat Oleh:</p>
+        <p class="dev-name">M. Shofiyan</p>
+        <p class="dev-name">M. Daffa Firdaus</p>
+        
+        <div style="margin-top: 40px;">
+            <button class="play-btn" onclick="startGame()">MAINKAN</button>
+        </div>
+        <p style="margin-top: 20px; font-size: 0.7rem; color: #aaa;">Edisi Spesial Ramadhan</p>
+    </div>
+
+    <div id="main-game">
+        <div class="game-card">
+            <div class="header">
+                <h2>🌙 RAMADHAN QUIZ</h2>
+                <div class="score-box">Soal: <span id="current-pos">1</span>/15 | Skor: <span id="score">0</span></div>
+            </div>
+
+            <div class="quiz-container">
+                <p class="info-ayat" id="surah-label">Surah...</p>
+                <div class="ayat-box">
+                    <p class="teks-arab" id="display-ayat"></p>
+                </div>
+                <div class="options-grid" id="options-container"></div>
+                <button id="next-btn" onclick="handleNext()">Lanjut →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-ui" class="hidden" style="background: white; padding: 40px; border-radius: 30px; text-align: center; border: 5px solid var(--emas); width: 100%; max-width: 400px;">
+        <h2 style="color: var(--hijau-gelap)">Alhamdulillah!</h2>
+        <div style="font-size: 4rem; margin: 20px 0;">🎉</div>
+        <h3 id="final-score-text">Skor Akhir: 0</h3>
+        <p id="feedback-text" style="margin: 15px 0; color: #666;"></p>
+        <button class="play-btn" onclick="location.reload()">MAIN LAGI</button>
+    </div>
+
+    <script>
+        // 1. DATA 15 SOAL
+        const daftarSoal = [
+            { s: "At-Tin: 1", q: "وَالتِّينِ وَالزَّيْتُونِ...", a: ["وَطُورِ سِينِينَ", "وَهَٰذَا الْبَلَدِ الْأَمِينِ", "لَقَدْ خَلَقْنَا الْإِنْسَانَ"], r: 0 },
+            { s: "At-Takasur: 1-2", q: "أَلْهَاكُمُ التَّكَاثُرُ . حَتَّىٰ زُرْتُمُ...", a: ["الْيَقِينَ", "الْمَقَابِرَ", "الْجَحِيمَ"], r: 1 },
+            { s: "Al-Waqiah: 1", q: "إِذَا وَقَعَتِ الْوَاقِعَةُ...", a: ["لَيْسَ لِوَقْعَتِهَا كَاذِبَةٌ", "خَافِضَةٌ رَافِعَةٌ", "إِذَا رُجَّتِ الْأَرْضُ"], r: 0 },
+            { s: "Al-Ikhlas: 1", q: "قُلْ هُوَ اللَّهُ أَحَدٌ...", a: ["اللَّهُ الصَّمَدُ", "لَمْ يَلِدْ وَلَمْ يُولَدْ", "وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ"], r: 0 },
+            { s: "An-Nas: 1-2", q: "قُلْ أَعُوذُ بِرَبِّ النَّاسِ . مَلِكِ النَّاسِ...", a: ["إِلَٰهِ النَّاسِ", "مِنْ شَرِّ الْوَسْوَاسِ", "الَّذِي يُوَسْوِسُ"], r: 0 },
+            { s: "Al-Falaq: 1-2", q: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ...", a: ["وَمِنْ شَرِّ غَاسِقٍ", "مِنْ شَرِّ مَا خَلَقَ", "وَمِنْ شَرِّ النَّفَّاثَاتِ"], r: 1 },
+            { s: "Al-Ma'un: 1", q: "أَرَأَيْتَ الَّذِي يُكَذِّبُ بِالدِّينِ...", a: ["فَذَٰلِكَ الَّذِي يَدُعُّ الْيَتِيمَ", "وَلَا يَحُضُّ عَلَىٰ طَعَامِ", "الَّذِينَ هُمْ عَنْ صَلَاتِهِمْ"], r: 0 },
+            { s: "Al-Asr: 1-2", q: "وَالْعَصْرِ . إِنَّ الْإِنْسَانَ لَفِي خُسْرٍ...", a: ["إِلَّا الَّذِينَ آمَنُوا", "وَتَوَاصَوْا بِالْحَقِّ", "وَتَوَاصَوْا بِالصَّبْرِ"], r: 0 },
+            { s: "Al-Kautsar: 1", q: "إِنَّا أَعطَينٰكَ الكَوثَرَ...", a: ["فَصَلِّ لِرَبِّكَ وَانحَر", "إِنَّ شانِئَكَ هُوَ الأَبتَرُ", "إِيَّاكَ نَعْبُدُ"], r: 0 },
+            { s: "Al-Quraisy: 1-2", q: "لِإِيلَافِ قُرَيْشٍ . إِيلَافِهِمْ رِحْلَةَ...", a: ["الشِّتَاءِ وَالصَّيْفِ", "هَٰذَا الْبَلَدِ", "الَّذِي أَطْعَمَهُمْ"], r: 0 },
+            { s: "Al-Fil: 1", q: "أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ...", a: ["الْفِيلِ", "النَّارِ", "الْجَنَّةِ"], r: 0 },
+            { s: "Al-Humazah: 1", q: "وَيْلٌ لِكُلِّ هُمَزَةٍ لُمَزَةٍ...", a: ["الَّذِي جَمَعَ مَالًا", "كَلَّا لَيُنْبَذَنَّ", "فِي الْحُطَمَةِ"], r: 0 },
+            { s: "An-Nasr: 1", q: "إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ...", a: ["وَرَأَيْتَ النَّاسَ", "يَدْخُلُونَ فِي دِينِ اللَّهِ", "فَسَبِّحْ بِحَمْدِ رَبِّكَ"], r: 0 },
+            { s: "At-Tin: 4", q: "لَقَدْ خَلَقْنَا الْإِنْسَانَ فِي...", a: ["أَحْسَنِ تَقْوِيمٍ", "أَسْفَلَ سَافِلِينَ", "غَيْرِ مَمْنُونٍ"], r: 0 },
+            { s: "At-Takasur: 8", q: "ثُمَّ لَتُسْأَلُنَّ يَوْمَئِذٍ عَنِ...", a: ["النَّعِيمِ", "الْجَحِيمِ", "الْيَقِينِ"], r: 0 }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+
+        // 2. LOGIKA FLOW
+        function startGame() {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('main-game').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const data = daftarSoal[currentIdx];
+            document.getElementById('current-pos').innerText = currentIdx + 1;
+            document.getElementById('surah-label').innerText = data.s;
+            document.getElementById('display-ayat').innerText = data.q;
+            document.getElementById('next-btn').style.display = "none";
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+
+            data.a.forEach((txt, i) => {
+                const btn = document.createElement('button');
+                btn.innerText = txt;
+                btn.classList.add('btn-option');
+                btn.onclick = () => check(i, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function check(idx, btn) {
+            const correctIdx = daftarSoal[currentIdx].r;
+            const allBtns = document.querySelectorAll('.btn-option');
+            allBtns.forEach(b => b.disabled = true);
+
+            if(idx === correctIdx) {
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('score').innerText = score;
+            } else {
+                btn.classList.add('wrong');
+                allBtns[correctIdx].classList.add('correct');
+            }
+            document.getElementById('next-btn').style.display = "block";
+        }
+
+        function handleNext() {
+            currentIdx++;
+            if(currentIdx < daftarSoal.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('main-game').style.display = 'none';
+            const resultUI = document.getElementById('result-ui');
+            resultUI.classList.remove('hidden');
+            document.getElementById('final-score-text').innerText = "Skor Akhir: " + score;
+            
+            let feedback = "Ayo belajar lagi!";
+            if(score >= 120) feedback = "Maa Sha Allah, Hafalanmu hebat!";
+            else if(score >= 80) feedback = "Bagus, tingkatkan lagi hafalannya!";
+            document.getElementById('feedback-text').innerText = feedback;
+        }
+    </script>
+</body>
+</html>
